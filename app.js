@@ -1,6 +1,3 @@
-// Main application file for the flight simulator
-
-// Initialize Cesium viewer
 let viewer;
 let plane;
 let isFlying = false;
