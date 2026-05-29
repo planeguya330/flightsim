@@ -32,7 +32,7 @@ const planeEntity = viewer.entities.add({
     position : Cesium.Cartesian3.fromDegrees(-75.1635, 39.9526, 1000), // Initial position at 1000m altitude
     orientation : new Cesium.VelocityOrientationProperty(Cesium.Math.PI_OVER_TWO), // Face direction of movement
     model : {
-        uri : 'path/to/your/plane.gltf', // Replace with your model's URI
+        uri : 'assets/plane.glb', // Replace with your model's URI
         minimumPixelSize : 128,
         maximumScale : 200,
         // Optional: scale the model if needed
