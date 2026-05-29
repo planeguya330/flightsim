@@ -1,3 +1,5 @@
+// Main application file for the flight simulator
+
 // Initialize Cesium viewer
 let viewer;
 let plane;
@@ -19,8 +21,17 @@ function initializeCesium() {
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1MjMyYTU1ZS1jNTk1LTRmYjgtYjc4Yy02YmRkOTY4ZTYzMjciLCJpZCI6NDM3NzMyLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODAwMjMxMTV9.hNZJ2HknGtszmRZXU8nevfa9BPqvQrToTcAAA2O6PBQ';
     
     // Create the viewer with basic terrain
+    // Try to use CesiumWorldTerrain, fallback to undefined (ellipsoid) if not available
+    let terrainProvider;
+    if (Cesium.CesiumWorldTerrain) {
+        terrainProvider = Cesium.CesiumWorldTerrain;
+    } else {
+        // Fallback to no terrain provider (ellipsoid)
+        terrainProvider = undefined;
+        console.warn('CesiumWorldTerrain not available, using ellipsoid terrain');
+    }
     viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: Cesium.createWorldTerrain(),
+        terrainProvider: terrainProvider,
         // Disable unnecessary UI elements for cleaner interface
         baseLayerPicker: false,
         geocoder: false,
@@ -45,18 +56,7 @@ function initializeCesium() {
     
     // Create the plane entity (will be replaced when flight starts)
     plane = new PlaneEntity(viewer);
-}
-
-// Initialize the menu system
-function initMenu() {
-    const startButton = document.getElementById('startButton');
-    const spawnSelect = document.getElementById('spawnSelect');
-    
-    startButton.addEventListener('click', function() {
-        const selectedLocation = spawnSelect.value;
-        startFlight(selectedLocation);
-    });
-}
+});
 
 // Start the flight at the selected location
 function startFlight(locationKey) {
@@ -129,5 +129,16 @@ function updateCamera() {
             direction: Cesium.Cartesian3.negate(offsetInWorld, new Cesium.Cartesian3()),
             up: Cesium.Cartesian3.UNIT_Z
         }
+    });
+}
+
+// Initialize the menu system
+function initMenu() {
+    const startButton = document.getElementById('startButton');
+    const spawnSelect = document.getElementById('spawnSelect');
+    
+    startButton.addEventListener('click', function() {
+        const selectedLocation = spawnSelect.value;
+        startFlight(selectedLocation);
     });
 }
