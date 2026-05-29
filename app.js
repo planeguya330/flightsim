@@ -81,6 +81,30 @@ function updateCamera() {
     const currentPosition = plane.entity.position.getValue(viewer.clock.currentTime);
     if (!currentPosition) return;
     
+    // Smooth camera tracking using an offset relative to aircraft heading
+    // Distance behind: 50m, height above: 15m
+    const relativeOffset = new Cesium.Cartesian3(-50, 0, 15); 
+    
+    const hpr = new Cesium.HeadingPitchRoll(plane.heading, plane.pitch, 0); // Omit roll for standard flight cam stability
+    const transformMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(currentPosition, hpr);
+    
+    const targetCamLocation = Cesium.Matrix4.multiplyByPoint(transformMatrix, relativeOffset, new Cesium.Cartesian3());
+    
+    viewer.camera.setView({
+        destination: targetCamLocation,
+        orientation: {
+            direction: Cesium.Cartesian3.normalize(
+                Cesium.Cartesian3.subtract(currentPosition, targetCamLocation, new Cesium.Cartesian3()), 
+                new Cesium.Cartesian3()
+            ),
+            up: Cesium.Matrix4.multiplyByPointAsVector(transformMatrix, new Cesium.Cartesian3(0, 0, 1), new Cesium.Cartesian3())
+        }
+    });
+}
+    
+    const currentPosition = plane.entity.position.getValue(viewer.clock.currentTime);
+    if (!currentPosition) return;
+    
     // Position camera 60 meters back, 18 meters above local craft assignment positioning
     const localOffset = new Cesium.Cartesian3(-60, 0, 18); 
     
