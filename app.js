@@ -16,47 +16,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Cesium viewer
 function initializeCesium() {
-    // IMPORTANT: Replace this with your actual Cesium Ion token
-    // Get a free token at https://cesium.com/ion/
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1MjMyYTU1ZS1jNTk1LTRmYjgtYjc4Yy02YmRkOTY4ZTYzMjciLCJpZCI6NDM3NzMyLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODAwMjMxMTV9.hNZJ2HknGtszmRZXU8nevfa9BPqvQrToTcAAA2O6PBQ';
-    
-    // Create the viewer with basic terrain
-    // Try to use CesiumWorldTerrain, fallback to undefined (ellipsoid) if not available
-    let terrainProvider;
-    if (Cesium.CesiumWorldTerrain) {
-        terrainProvider = Cesium.CesiumWorldTerrain;
-    } else {
-        // Fallback to no terrain provider (ellipsoid)
-        terrainProvider = undefined;
-        console.warn('CesiumWorldTerrain not available, using ellipsoid terrain');
-    }
-    viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: terrainProvider,
-        // Disable unnecessary UI elements for cleaner interface
-        baseLayerPicker: false,
-        geocoder: false,
-        homeButton: false,
-        infoBox: false,
-        sceneModePicker: false,
-        selectionIndicator: false,
-        timeline: false,
-        navigationHelpButton: false,
-        animation: false
-    });
-    
-    // Set initial camera view
-    viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(-75.1635, 39.9526, 15000),
-        orientation: {
-            heading: Cesium.Math.toRadians(0.0),
-            pitch: Cesium.Math.toRadians(-20.0),
-            roll: 0.0
+    try {
+        // IMPORTANT: Replace this with your actual Cesium Ion token
+        // Get a free token at https://cesium.com/ion/
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1MjMyYTU1ZS1jNTk1LTRmYjgtYjc4Yy02YmRkOTY4ZTYzMjciLCJpZCI6NDM3NzMyLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODAwMjMxMTV9.hNZJ2HknGtszmRZXU8nevfa9BPqvQrToTcAAA2O6PBQ';
+        
+        // Create the viewer with basic terrain
+        // Try to use CesiumWorldTerrain, fallback to undefined (ellipsoid) if not available
+        let terrainProvider;
+        if (Cesium.CesiumWorldTerrain) {
+            terrainProvider = Cesium.CesiumWorldTerrain;
+        } else {
+            // Fallback to no terrain provider (ellipsoid)
+            terrainProvider = undefined;
+            console.warn('CesiumWorldTerrain not available, using ellipsoid terrain');
         }
-    });
-    
-    // Create the plane entity (will be replaced when flight starts)
-    plane = new PlaneEntity(viewer);
-});
+        viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: terrainProvider,
+            // Disable unnecessary UI elements for cleaner interface
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            infoBox: false,
+            sceneModePicker: false,
+            selectionIndicator: false,
+            timeline: false,
+            navigationHelpButton: false,
+            animation: false
+        });
+        
+        // Set initial camera view
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(-75.1635, 39.9526, 15000),
+            orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-20.0),
+                roll: 0.0
+            }
+        });
+        
+        // Create the plane entity (will be replaced when flight starts)
+        plane = new PlaneEntity(viewer);
+    } catch (e) {
+        console.error("Error initializing Cesium:", e);
+        // Even if Cesium fails to initialize, we still want the UI to work
+        // so we'll create a mock viewer and plane object
+        viewer = {
+            camera: {
+                setView: function() {}
+            },
+            entities: {
+                add: function() { return null; },
+                remove: function() {}
+            }
+        };
+        plane = new PlaneEntity(viewer);
+    }
+}
 
 // Start the flight at the selected location
 function startFlight(locationKey) {
@@ -137,8 +153,21 @@ function initMenu() {
     const startButton = document.getElementById('startButton');
     const spawnSelect = document.getElementById('spawnSelect');
     
+    // Add error checking to see if elements are found
+    if (!startButton) {
+        console.error("Start button not found!");
+        return;
+    }
+    if (!spawnSelect) {
+        console.error("Spawn select not found!");
+        return;
+    }
+    
     startButton.addEventListener('click', function() {
         const selectedLocation = spawnSelect.value;
         startFlight(selectedLocation);
     });
+    
+    // Also add a console log to verify the listener is attached
+    console.log("Menu initialized, click listener attached to start button");
 }
