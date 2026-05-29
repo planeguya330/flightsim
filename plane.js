@@ -44,27 +44,35 @@ class PlaneEntity {
         this.velocity = new Cesium.Cartesian3(0, this.airspeed, 0); // Moving North initially
         
         this.entity = this.viewer.entities.add({
-            name: 'Aircraft',
-            position: startPos,
-            orientation: new Cesium.CallbackProperty(() => {
-                const hpr = new Cesium.HeadingPitchRoll(this.heading, this.pitch, this.roll);
-                return Cesium.Transforms.headingPitchRollQuaternion(this.entity.position.getValue(this.viewer.clock.currentTime), hpr);
-            }, false),
-            model: {
-                uri: 'assets/plane.glb',
-                minimumPixelSize: 50,
-                maximumScale: 200
-            },
-            label: {
-                text: 'Aircraft',
-                font: '14pt monospace',
-                fillColor: Cesium.Color.YELLOW,
-                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                outlineWidth: 2,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0, -30)
-            }
-        });
+    name: 'Aircraft',
+    position: startPos,
+    orientation: new Cesium.CallbackProperty(() => {
+        const hpr = new Cesium.HeadingPitchRoll(this.heading, this.pitch, this.roll);
+        return Cesium.Transforms.headingPitchRollQuaternion(this.entity.position.getValue(this.viewer.clock.currentTime), hpr);
+    }, false),
+    // 3D Model Loader
+    model: {
+        uri: 'assets/plane.glb',
+        minimumPixelSize: 40,
+        maximumScale: 200
+    },
+    // Emergency Backup Box: Renders only if the .glb fails to load!
+    box: {
+        dimensions: new Cesium.Cartesian3(5.0, 10.0, 2.0), // Width, Length, Height in meters
+        material: Cesium.Color.GREEN,
+        outline: true,
+        outlineColor: Cesium.Color.BLACK
+    },
+    label: {
+        text: 'Aircraft',
+        font: '12pt monospace',
+        fillColor: Cesium.Color.YELLOW,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        outlineWidth: 2,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        pixelOffset: new Cesium.Cartesian2(0, -30)
+    }
+});
         
         // Snap camera right behind immediately
         this.viewer.trackedEntity = undefined; 
