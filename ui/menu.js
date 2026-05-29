@@ -1,21 +1,10 @@
 // UI module for the flight simulator - utility functions only
 
-/**
- * Setup touch controls for mobile devices
- */
 function setupTouchControls() {
-    // This would implement on-screen joysticks or buttons for mobile
-    // For now, we'll leave this as a placeholder
     console.log("Touch controls placeholder - implement as needed");
 }
 
-/**
- * Show a notification message on screen
- * @param {string} message - The message to display
- * @param {number} duration - How long to show the message in seconds (optional)
- */
 function showNotification(message, duration = 3) {
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = message;
@@ -23,73 +12,65 @@ function showNotification(message, duration = 3) {
     notification.style.bottom = '20px';
     notification.style.left = '50%';
     notification.style.transform = 'translateX(-50%)';
-    notification.style.background = 'rgba(0, 0, 0, 0.7)';
-    notification.style.color = 'white';
+    notification.style.background = 'rgba(0, 0, 0, 0.85)';
+    notification.style.color = '#00ff00'; // Sleek green radar look
+    notification.style.border = '1px solid #00ff00';
     notification.style.padding = '10px 20px';
-    notification.style.borderRadius = '5px';
+    notification.style.borderRadius = '3px';
     notification.style.zIndex = '1001';
-    notification.style.fontFamily = 'Arial, sans-serif';
+    notification.style.fontFamily = 'monospace';
     
     document.body.appendChild(notification);
     
-    // Remove after duration
     setTimeout(() => {
         notification.remove();
     }, duration * 1000);
 }
 
-/**
- * Update the HUD (Heads-Up Display) with flight information
- * @param {Object} flightData - Object containing flight data to display
- */
 function updateHUD(flightData) {
     let hud = document.getElementById('hud');
     if (!hud) {
         hud = document.createElement('div');
         hud.id = 'hud';
         hud.style.position = 'fixed';
-        hud.style.top = '10px';
-        hud.style.left = '10px';
-        hud.style.background = 'rgba(0, 0, 0, 0.7)';
-        hud.style.color = 'white';
-        hud.style.padding = '10px';
-        hud.style.borderRadius = '5px';
+        hud.style.top = '20px';
+        hud.style.left = '20px';
+        hud.style.background = 'rgba(10, 15, 10, 0.75)';
+        hud.style.color = '#33ff33'; // Crisp green cockpit HUD phosphor color
+        hud.style.border = '1px solid rgba(51, 255, 51, 0.4)';
+        hud.style.padding = '15px';
+        hud.style.borderRadius = '4px';
         hud.style.fontFamily = 'Courier New, monospace';
         hud.style.fontSize = '14px';
-        hud.style.lineHeight = '1.4';
+        hud.style.fontWeight = 'bold';
+        hud.style.lineHeight = '1.5';
         hud.style.zIndex = 1000;
         document.body.appendChild(hud);
     }
     
-    // Format the HUD text
     const { airspeed, altitude, heading, verticalSpeed, throttle } = flightData || {};
     const speedKnots = airspeed ? (airspeed * 1.94384).toFixed(0) : '0';
     const altitudeFeet = altitude ? (altitude * 3.28084).toFixed(0) : '0';
-    const headingDeg = heading ? ((heading * 180 / Math.PI) + 360) % 360 : '0';
+    const headingDeg = heading ? (((heading * 180 / Math.PI) + 360) % 360).toFixed(0) : '0';
     const vsFeetMin = verticalSpeed ? (verticalSpeed * 196.85).toFixed(0) : '0';
     const throttlePct = throttle !== undefined ? (throttle * 100).toFixed(0) : '0';
     
     hud.innerHTML = `
-        Speed: ${speedKnots} kts<br>
-        Altitude: ${altitudeFeet} ft<br>
-        Heading: ${headingDeg}°<br>
-        V/S: ${vsFeetMin} ft/min<br>
-        Throttle: ${throttlePct}%
+        SYS OK // FLIGHT DATA<br>
+        --------------------<br>
+        SPEED:    ${speedKnots.padStart(3, ' ')} KTS<br>
+        ALTITUDE: ${altitudeFeet.padStart(5, ' ')} FT<br>
+        HEADING:  ${headingDeg.padStart(3, '0')}°<br>
+        V/S:      ${vsFeetMin.padStart(5, ' ')} FT/MIN<br>
+        THROTTLE: ${throttlePct.padStart(3, ' ')}%
     `;
 }
 
-/**
- * Clear the HUD from the screen
- */
 function clearHUD() {
     const hud = document.getElementById('hud');
-    if (hud) {
-        hud.remove();
-    }
+    if (hud) hud.remove();
 }
 
-// Export functions for use in other modules (if using a module system)
-// For now, we'll attach to window object for simplicity
 window.ui = {
     showNotification: showNotification,
     updateHUD: updateHUD,
@@ -97,42 +78,63 @@ window.ui = {
     setupTouchControls: setupTouchControls
 };
 
-// Add keyboard controls for flight
+// Continuous Input Tracking System
+const activeKeys = {};
+
 document.addEventListener('keydown', function(event) {
-    // Only process keys when flying
-    if (typeof window.isFlying === 'undefined' || !window.isFlying) return;
+    if (!window.isFlying || !window.plane) return;
     
-    switch(event.key.toLowerCase()) {
-        case 'w': // Increase throttle
-            if (window.plane) window.plane.setThrottle(Math.min(1, window.plane.throttle + 0.1));
-            break;
-        case 's': // Decrease throttle
-            if (window.plane) window.plane.setThrottle(Math.max(0, window.plane.throttle - 0.1));
-            break;
-        case 'arrowup': // Pitch up (pull back on stick)
-            if (window.plane) window.plane.setElevator(Math.min(1, window.plane.elevator + 0.1));
-            break;
-        case 'arrowdown': // Pitch down (push forward on stick)
-            if (window.plane) window.plane.setElevator(Math.max(-1, window.plane.elevator - 0.1));
-            break;
-        case 'arrowleft': // Yaw left (left rudder)
-            if (window.plane) window.plane.setRudder(Math.max(-1, window.plane.rudder - 0.1));
-            break;
-        case 'arrowright': // Yaw right (right rudder)
-            if (window.plane) window.plane.setRudder(Math.min(1, window.plane.rudder + 0.1));
-            break;
-        case 'a': // Roll left (aileron left)
-            if (window.plane) window.plane.setAileron(Math.max(-1, window.plane.aileron - 0.1));
-            break;
-        case 'd': // Roll right (aileron right)
-            if (window.plane) window.plane.setAileron(Math.min(1, window.plane.aileron + 0.1));
-            break;
-        case ' ': // Spacebar - neutral controls
-            if (window.plane) {
-                window.plane.setElevator(0);
-                window.plane.setRudder(0);
-                window.plane.setAileron(0);
-            }
-            break;
+    const key = event.key.toLowerCase();
+    activeKeys[key] = true;
+    
+    // Process single-toggle state inputs
+    if (key === 'w') {
+        window.plane.setThrottle(Math.min(1.0, window.plane.throttle + 0.05));
     }
+    if (key === 's') {
+        window.plane.setThrottle(Math.max(0.0, window.plane.throttle - 0.05));
+    }
+    
+    updateFlightControlSurfaces();
 });
+
+document.addEventListener('keyup', function(event) {
+    if (!window.isFlying || !window.plane) return;
+    
+    const key = event.key.toLowerCase();
+    activeKeys[key] = false;
+    
+    updateFlightControlSurfaces();
+});
+
+// Map held keys continuously to flight surfaces
+function updateFlightControlSurfaces() {
+    if (!window.plane) return;
+
+    // Elevators (Pitch UP / DOWN)
+    if (activeKeys['arrowup']) {
+        window.plane.setElevator(1.0); // Pull back on stick
+    } else if (activeKeys['arrowdown']) {
+        window.plane.setElevator(-1.0); // Push forward
+    } else {
+        window.plane.setElevator(0.0); // Center stick
+    }
+
+    // Ailerons (Roll LEFT / RIGHT)
+    if (activeKeys['a'] || activeKeys['arrowleft']) {
+        window.plane.setAileron(-1.0); 
+    } else if (activeKeys['d'] || activeKeys['arrowright']) {
+        window.plane.setAileron(1.0);
+    } else {
+        window.plane.setAileron(0.0);
+    }
+
+    // Rudders (Yaw LEFT / RIGHT)
+    if (activeKeys['q']) {
+        window.plane.setRudder(-1.0);
+    } else if (activeKeys['e']) {
+        window.plane.setRudder(1.0);
+    } else {
+        window.plane.setRudder(0.0);
+    }
+}
