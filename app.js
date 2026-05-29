@@ -14,7 +14,7 @@ const viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 // Replace 'YOUR_CESIUM_ION_TOKEN_HERE' with your actual Cesium Ion token
-Cesium.Ion.defaultAccessToken = 'YOUR_CESIUM_ION_TOKEN_HERE';
+Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1MjMyYTU1ZS1jNTk1LTRmYjgtYjc4Yy02YmRkOTY4ZTYzMjciLCJpZCI6NDM3NzMyLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODAwMjMxMTV9.hNZJ2HknGtszmRZXU8nevfa9BPqvQrToTcAAA2O6PBQ';
 
 // Set the initial view (example: over Philadelphia)
 viewer.camera.setView({
