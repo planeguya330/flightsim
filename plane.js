@@ -53,12 +53,13 @@ class PlaneEntity {
             //     maximumScale: 200
             // },
             // For now, using a simple billboard as placeholder:
-            billboard: {
-                image: 'https://via.placeholder.com/50',
-                width: 50,
-                height: 50
-            },
-            label: {
+        model: {
+            uri: 'assets/plane.glb',
+            minimumPixelSize: 50,
+            maximumScale: 200
+        },
+        
+         label: {
                 text: 'Aircraft',
                 font: '14pt sans-serif',
                 fillColor: Color.YELLOW,
