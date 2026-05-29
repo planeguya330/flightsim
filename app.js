@@ -10,7 +10,6 @@ const viewer = new Cesium.Viewer('cesiumContainer', {
     navigationHelpButton: false,
     animation: false,
     // Use terrain if needed, but for flight simulation, we might want to disable it for simplicity
-    terrainProvider: Cesium.createWorldTerrain()
 });
 
 // Replace 'YOUR_CESIUM_ION_TOKEN_HERE' with your actual Cesium Ion token
