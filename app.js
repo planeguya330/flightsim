@@ -1,70 +1,133 @@
-const viewer = new Cesium.Viewer('cesiumContainer', {
-    // Optionally, you can disable the base layer picker and other UI elements
-    baseLayerPicker: false,
-    geocoder: false,
-    homeButton: false,
-    infoBox: false,
-    sceneModePicker: false,
-    selectionIndicator: false,
-    timeline: false,
-    navigationHelpButton: false,
-    animation: false,
-    // Use terrain if needed, but for flight simulation, we might want to disable it for simplicity
+// Initialize Cesium viewer
+let viewer;
+let plane;
+let isFlying = false;
+
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Cesium
+    initializeCesium();
+    
+    // Initialize UI
+    initMenu();
 });
 
-// Replace 'YOUR_CESIUM_ION_TOKEN_HERE' with your actual Cesium Ion token
-Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1MjMyYTU1ZS1jNTk1LTRmYjgtYjc4Yy02YmRkOTY4ZTYzMjciLCJpZCI6NDM3NzMyLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODAwMjMxMTV9.hNZJ2HknGtszmRZXU8nevfa9BPqvQrToTcAAA2O6PBQ';
+// Initialize Cesium viewer
+function initializeCesium() {
+    // IMPORTANT: Replace this with your actual Cesium Ion token
+    // Get a free token at https://cesium.com/ion/
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1MjMyYTU1ZS1jNTk1LTRmYjgtYjc4Yy02YmRkOTY4ZTYzMjciLCJpZCI6NDM3NzMyLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODAwMjMxMTV9.hNZJ2HknGtszmRZXU8nevfa9BPqvQrToTcAAA2O6PBQ';
+    
+    // Create the viewer with basic terrain
+    viewer = new Cesium.Viewer('cesiumContainer', {
+        terrainProvider: Cesium.createWorldTerrain(),
+        // Disable unnecessary UI elements for cleaner interface
+        baseLayerPicker: false,
+        geocoder: false,
+        homeButton: false,
+        infoBox: false,
+        sceneModePicker: false,
+        selectionIndicator: false,
+        timeline: false,
+        navigationHelpButton: false,
+        animation: false
+    });
+    
+    // Set initial camera view
+    viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(-75.1635, 39.9526, 15000),
+        orientation: {
+            heading: Cesium.Math.toRadians(0.0),
+            pitch: Cesium.Math.toRadians(-20.0),
+            roll: 0.0
+        }
+    });
+    
+    // Create the plane entity (will be replaced when flight starts)
+    plane = new PlaneEntity(viewer);
+}
 
-// Set the initial view (example: over Philadelphia)
-viewer.camera.setView({
-    destination : Cesium.Cartesian3.fromDegrees(-75.1635, 39.9526, 5000),
-    orientation : {
-        heading : Cesium.Math.toRadians(0.0), // east, default value is 0.0 (north)
-        pitch   : Cesium.Math.toRadians(-35.0), // default value (looking down)
-        roll    : 0.0
+// Initialize the menu system
+function initMenu() {
+    const startButton = document.getElementById('startButton');
+    const spawnSelect = document.getElementById('spawnSelect');
+    
+    startButton.addEventListener('click', function() {
+        const selectedLocation = spawnSelect.value;
+        startFlight(selectedLocation);
+    });
+}
+
+// Start the flight at the selected location
+function startFlight(locationKey) {
+    // Define airport locations (ICAO codes with lat, lng, elevation)
+    const airports = {
+        kphl: { name: "Philadelphia International", lat: 39.8721, lng: -75.2408, elevation: 12 },
+        kjor: { name: "Juan Santamaría International", lat: 9.9939, lng: -84.2088, elevation: 924 },
+        kgcc: { name: "Gillette-Campbell County Airport", lat: 44.3489, lng: -105.5391, elevation: 436 },
+        katl: { name: "Hartsfield-Jackson Atlanta International", lat: 33.6407, lng: -84.4277, elevation: 320 },
+        klax: { name: "Los Angeles International", lat: 33.9416, lng: -118.4085, elevation: 39 }
+    };
+    
+    const airport = airports[locationKey];
+    if (!airport) {
+        console.error("Unknown airport:", locationKey);
+        return;
     }
-});
+    
+    // Hide the menu
+    document.getElementById('menuOverlay').style.display = 'none';
+    
+    // Create the plane at the selected airport
+    plane.createAtLocation(airport.lat, airport.lng, airport.elevation + 50); // 50m above ground
+    
+    // Start the flight simulation
+    isFlying = true;
+    startFlightLoop();
+}
 
-// Add the aircraft model (replace 'path/to/your/plane.gltf' with the actual path to your 3D model)
-const planeEntity = viewer.entities.add({
-    name : 'Aircraft',
-    position : Cesium.Cartesian3.fromDegrees(-75.1635, 39.9526, 1000), // Initial position at 1000m altitude
-    orientation : new Cesium.VelocityOrientationProperty(Cesium.Math.PI_OVER_TWO), // Face direction of movement
-    model : {
-        uri : 'assets/plane.glb', // Replace with your model's URI
-        minimumPixelSize : 128,
-        maximumScale : 200,
-        // Optional: scale the model if needed
-        scale : 1.0
-    }
-});
+// Main flight simulation loop
+function flightLoop(time) {
+    if (!isFlying) return;
+    
+    // Update plane physics
+    plane.update(time);
+    
+    // Update camera to follow plane
+    updateCamera();
+    
+    // Request next frame
+    requestAnimationFrame(flightLoop);
+}
 
-// Optional: Add a track to follow the plane
-viewer.trackedEntity = planeEntity;
+function startFlightLoop() {
+    // Start the animation loop
+    requestAnimationFrame(flightLoop);
+}
 
-// Example: Simple animation loop to move the plane (for demonstration)
-let time = 0;
-viewer.clock.onTick.addEventListener(function(clock) {
-    // Circular motion for demonstration purposes
-    const radius = 0.1; // degrees
-    const speed = 0.0001; // radians per second
-    time += clock._delta * speed;
-
-    const longitude = -75.1635 + radius * Math.cos(time);
-    const latitude  = 39.9526 + radius * Math.sin(time);
-    const altitude  = 1000 + 50 * Math.sin(time * 2); // slight altitude variation
-
-    planeEntity.position = Cesium.Cartesian3.fromDegrees(longitude, latitude, altitude);
-
-    // Optional: update orientation to face direction of movement
-    const position = planeEntity.position.getValue(clock.currentTime);
-    if (position) {
-        const nextPosition = Cesium.Cartesian3.fromDegrees(
-            longitude + 0.0001 * Math.cos(time),
-            latitude  + 0.0001 * Math.sin(time),
-            altitude
-        );
-        const orientation = Cesium.HeadingPitchRoll.fromDirection(position, nextPosition, viewer.scene.globe.ellipsoid);
-        planeEntity.orientation = new Cesium.HeadingPitchRoll(orientation.heading, orientation.pitch, orientation.roll);
-    }
-});
+// Update camera to follow the plane
+function updateCamera() {
+    if (!plane.entity || !plane.entity.position) return;
+    
+    const position = plane.entity.position.getValue(viewer.clock.currentTime);
+    if (!position) return;
+    
+    // Position camera behind and slightly above the plane
+    const offset = new Cesium.Cartesian3(-50, 0, 30); // 50m behind, 30m above
+    const offsetInWorld = Cesium.Matrix3.multiplyByVector(
+        Cesium.Transforms.headingPitchRollToFixedFrame(position, plane.hpr),
+        offset,
+        new Cesium.Cartesian3()
+    );
+    
+    const cameraPosition = Cesium.Cartesian3.add(position, offsetInWorld, new Cesium.Cartesian3());
+    
+    // Set camera position and orientation to look at the plane
+    viewer.camera.setView({
+        destination: cameraPosition,
+        orientation: {
+            direction: Cesium.Cartesian3.negate(offsetInWorld, new Cesium.Cartesian3()),
+            up: Cesium.Cartesian3.UNIT_Z
+        }
+    });
+}
