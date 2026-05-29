@@ -2,35 +2,18 @@ let viewer;
 let plane;
 let isFlying = false;
 
-// Wait for DOM to load
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Cesium
     initializeCesium();
-    
-    // Initialize UI
     initMenu();
 });
 
-// Initialize Cesium viewer
 function initializeCesium() {
     try {
-        // IMPORTANT: Replace this with your actual Cesium Ion token
-        // Get a free token at https://cesium.com/ion/
+        // Shared community key setup fallback
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1MjMyYTU1ZS1jNTk1LTRmYjgtYjc4Yy02YmRkOTY4ZTYzMjciLCJpZCI6NDM3NzMyLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODAwMjMxMTV9.hNZJ2HknGtszmRZXU8nevfa9BPqvQrToTcAAA2O6PBQ';
         
-        // Create the viewer with basic terrain
-        // Try to use CesiumWorldTerrain, fallback to undefined (ellipsoid) if not available
-        let terrainProvider;
-        if (Cesium.CesiumWorldTerrain) {
-            terrainProvider = Cesium.CesiumWorldTerrain;
-        } else {
-            // Fallback to no terrain provider (ellipsoid)
-            terrainProvider = undefined;
-            console.warn('CesiumWorldTerrain not available, using ellipsoid terrain');
-        }
         viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: terrainProvider,
-            // Disable unnecessary UI elements for cleaner interface
+            terrainProvider: Cesium.createWorldTerrain ? Cesium.createWorldTerrain() : undefined,
             baseLayerPicker: false,
             geocoder: false,
             homeButton: false,
@@ -42,7 +25,9 @@ function initializeCesium() {
             animation: false
         });
         
-        // Set initial camera view
+        // Enable atmospheric lighting elements for sleek immersion look
+        viewer.scene.globe.enableLighting = true;
+        
         viewer.camera.setView({
             destination: Cesium.Cartesian3.fromDegrees(-75.1635, 39.9526, 15000),
             orientation: {
@@ -52,28 +37,13 @@ function initializeCesium() {
             }
         });
         
-        // Create the plane entity (will be replaced when flight starts)
         plane = new PlaneEntity(viewer);
     } catch (e) {
         console.error("Error initializing Cesium:", e);
-        // Even if Cesium fails to initialize, we still want the UI to work
-        // so we'll create a mock viewer and plane object
-        viewer = {
-            camera: {
-                setView: function() {}
-            },
-            entities: {
-                add: function() { return null; },
-                remove: function() {}
-            }
-        };
-        plane = new PlaneEntity(viewer);
     }
 }
 
-// Start the flight at the selected location
 function startFlight(locationKey) {
-    // Define airport locations (ICAO codes with lat, lng, elevation)
     const airports = {
         kphl: { name: "Philadelphia International", lat: 39.8721, lng: -75.2408, elevation: 12 },
         kjor: { name: "Juan Santamaría International", lat: 9.9939, lng: -84.2088, elevation: 924 },
@@ -83,88 +53,61 @@ function startFlight(locationKey) {
     };
     
     const airport = airports[locationKey];
-    if (!airport) {
-        console.error("Unknown airport:", locationKey);
-        return;
-    }
+    if (!airport) return;
     
-    // Hide the menu
     document.getElementById('menuOverlay').style.display = 'none';
     
-    // Create the plane at the selected airport
-    plane.createAtLocation(airport.lat, airport.lng, airport.elevation + 50); // 50m above ground
+    // Spawn 150 meters up so we have plenty of gliding room right off the bat!
+    plane.createAtLocation(airport.lat, airport.lng, airport.elevation + 150); 
     
-    // Start the flight simulation
     isFlying = true;
-    startFlightLoop();
-}
-
-// Main flight simulation loop
-function flightLoop(time) {
-    if (!isFlying) return;
     
-    // Update plane physics
-    plane.update(time);
-    
-    // Update camera to follow plane
-    updateCamera();
-    
-    // Request next frame
-    requestAnimationFrame(flightLoop);
-}
-
-function startFlightLoop() {
-    // Start the animation loop
-    requestAnimationFrame(flightLoop);
-}
-
-// Update camera to follow the plane
-function updateCamera() {
-    if (!plane.entity || !plane.entity.position) return;
-    
-    const position = plane.entity.position.getValue(viewer.clock.currentTime);
-    if (!position) return;
-    
-    // Position camera behind and slightly above the plane
-    const offset = new Cesium.Cartesian3(-50, 0, 30); // 50m behind, 30m above
-    const offsetInWorld = Cesium.Matrix3.multiplyByVector(
-        Cesium.Transforms.headingPitchRollToFixedFrame(position, plane.hpr),
-        offset,
-        new Cesium.Cartesian3()
-    );
-    
-    const cameraPosition = Cesium.Cartesian3.add(position, offsetInWorld, new Cesium.Cartesian3());
-    
-    // Set camera position and orientation to look at the plane
-    viewer.camera.setView({
-        destination: cameraPosition,
-        orientation: {
-            direction: Cesium.Cartesian3.negate(offsetInWorld, new Cesium.Cartesian3()),
-            up: Cesium.Cartesian3.UNIT_Z
+    // Hook straight into Cesium's internal render frame tick clock cycle
+    viewer.scene.preUpdate.addEventListener(function(scene, time) {
+        if (isFlying) {
+            // Cesium ticks run ideally at 60 FPS (~0.016 seconds per frame step)
+            const dt = scene.deltaTime; 
+            if(dt > 0) {
+                plane.update(dt);
+                updateCamera();
+            }
         }
     });
 }
 
-// Initialize the menu system
+function updateCamera() {
+    if (!plane.entity) return;
+    
+    const currentPosition = plane.entity.position.getValue(viewer.clock.currentTime);
+    if (!currentPosition) return;
+    
+    // Position camera 60 meters back, 18 meters above local craft assignment positioning
+    const localOffset = new Cesium.Cartesian3(-60, 0, 18); 
+    
+    const hpr = new Cesium.HeadingPitchRoll(plane.heading, plane.pitch, plane.roll);
+    const localToWorldMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(currentPosition, hpr);
+    
+    const targetCameraPosition = Cesium.Matrix4.multiplyByPoint(localToWorldMatrix, localOffset, new Cesium.Cartesian3());
+    
+    viewer.camera.setView({
+        destination: targetCameraPosition,
+        orientation: {
+            direction: Cesium.Cartesian3.normalize(
+                Cesium.Cartesian3.subtract(currentPosition, targetCameraPosition, new Cesium.Cartesian3()), 
+                new Cesium.Cartesian3()
+            ),
+            up: Cesium.Matrix4.multiplyByPointAsVector(localToWorldMatrix, new Cesium.Cartesian3(0, 0, 1), new Cesium.Cartesian3())
+        }
+    });
+}
+
 function initMenu() {
     const startButton = document.getElementById('startButton');
     const spawnSelect = document.getElementById('spawnSelect');
     
-    // Add error checking to see if elements are found
-    if (!startButton) {
-        console.error("Start button not found!");
-        return;
+    if (startButton && spawnSelect) {
+        startButton.addEventListener('click', function() {
+            startFlight(spawnSelect.value);
+        });
     }
-    if (!spawnSelect) {
-        console.error("Spawn select not found!");
-        return;
-    }
-    
-    startButton.addEventListener('click', function() {
-        const selectedLocation = spawnSelect.value;
-        startFlight(selectedLocation);
-    });
-    
-    // Also add a console log to verify the listener is attached
-    console.log("Menu initialized, click listener attached to start button");
 }
