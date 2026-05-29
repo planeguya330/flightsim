@@ -147,4 +147,4 @@ if (document.readyState === 'loading') {
 } else {
     initMenu();
 }
-- Thought: 14ms
+
