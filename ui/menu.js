@@ -1,18 +1,5 @@
-// UI module for the flight simulator menu system
+// UI module for the flight simulator - utility functions only
 
-/**
- * Initialize the menu system
- */
-function initMenu() {
-    // The menu initialization is now handled in app.js
-    // This file can be used for additional UI functionality if needed
-    
-    // Example: Add keyboard controls for flight
-    document.addEventListener('keydown', function(event) {
-        // Only process keys when flying
-        if (!window.isFlying) return;
-        
-        
 /**
  * Setup touch controls for mobile devices
  */
@@ -70,7 +57,7 @@ function updateHUD(flightData) {
         hud.style.fontFamily = 'Courier New, monospace';
         hud.style.fontSize = '14px';
         hud.style.lineHeight = '1.4';
-        hud.style.zIndex = '1000';
+        hud.style.zIndex = 1000;
         document.body.appendChild(hud);
     }
     
@@ -101,91 +88,6 @@ function clearHUD() {
     }
 }
 
-// Initialize the menu when the script loads
-// Note: In our setup, this is called from app.js after DOMContentLoaded
-// but we keep this here for potential standalone use
-// UI module for the flight simulator - utility functions only
-
-/**
-
-// UI module for the flight simulator - utility functions only
-
-/**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- * Setup touch controls for mobile devices
- */
-function setupTouchControls() {
-    // This would implement on-screen joysticks or buttons for mobile
-        hud.remove();
-    }
-}
-
-
-
-
-
-
-
-
-
 // Export functions for use in other modules (if using a module system)
 // For now, we'll attach to window object for simplicity
 window.ui = {
@@ -195,53 +97,42 @@ window.ui = {
     setupTouchControls: setupTouchControls
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Add keyboard controls for flight
+document.addEventListener('keydown', function(event) {
+    // Only process keys when flying
+    if (typeof window.isFlying === 'undefined' || !window.isFlying) return;
+    
+    switch(event.key.toLowerCase()) {
+        case 'w': // Increase throttle
+            if (window.plane) window.plane.setThrottle(Math.min(1, window.plane.throttle + 0.1));
+            break;
+        case 's': // Decrease throttle
+            if (window.plane) window.plane.setThrottle(Math.max(0, window.plane.throttle - 0.1));
+            break;
+        case 'arrowup': // Pitch up (pull back on stick)
+            if (window.plane) window.plane.setElevator(Math.min(1, window.plane.elevator + 0.1));
+            break;
+        case 'arrowdown': // Pitch down (push forward on stick)
+            if (window.plane) window.plane.setElevator(Math.max(-1, window.plane.elevator - 0.1));
+            break;
+        case 'arrowleft': // Yaw left (left rudder)
+            if (window.plane) window.plane.setRudder(Math.max(-1, window.plane.rudder - 0.1));
+            break;
+        case 'arrowright': // Yaw right (right rudder)
+            if (window.plane) window.plane.setRudder(Math.min(1, window.plane.rudder + 0.1));
+            break;
+        case 'a': // Roll left (aileron left)
+            if (window.plane) window.plane.setAileron(Math.max(-1, window.plane.aileron - 0.1));
+            break;
+        case 'd': // Roll right (aileron right)
+            if (window.plane) window.plane.setAileron(Math.min(1, window.plane.aileron + 0.1));
+            break;
+        case ' ': // Spacebar - neutral controls
+            if (window.plane) {
+                window.plane.setElevator(0);
+                window.plane.setRudder(0);
+                window.plane.setAileron(0);
+            }
+            break;
+    }
+});
