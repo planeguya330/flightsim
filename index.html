@@ -8,7 +8,25 @@
 </head>
 <body>
     <div id="cesiumContainer"></div>
+    <div id="menuOverlay">
+        <div id="menuContent">
+            <h1>Flight Simulator</h1>
+            <div class="menu-item">
+                <label for="spawnSelect">Choose Spawn Location:</label>
+                <select id="spawnSelect">
+                    <option value="kphl">Philadelphia (KPHL)</option>
+                    <option value="kjor">Juan Santamaría (KSJO)</option>
+                    <option value="kgcc">Gillette-Campbell County (KGCC)</option>
+                    <option value="katl">Atlanta (KATL)</option>
+                    <option value="klax">Los Angeles (KLAX)</option>
+                </select>
+            </div>
+            <button id="startButton">Start Flight</button>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/cesium@1.115/Build/Cesium/Cesium.js"></script>
     <script src="app.js"></script>
+    <script src="plane.js"></script>
+    <script src="ui/menu.js"></script>
 </body>
 </html>
