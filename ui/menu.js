@@ -12,45 +12,7 @@ function initMenu() {
         // Only process keys when flying
         if (!window.isFlying) return;
         
-        switch(event.key.toLowerCase()) {
-            case 'w': // Increase throttle
-                if (window.plane) window.plane.setThrottle(Math.min(1, window.plane.throttle + 0.1));
-                break;
-            case 's': // Decrease throttle
-                if (window.plane) window.plane.setThrottle(Math.max(0, window.plane.throttle - 0.1));
-                break;
-            case 'arrowup': // Pitch up (pull back on stick)
-                if (window.plane) window.plane.setElevator(Math.min(1, window.plane.elevator + 0.1));
-                break;
-            case 'arrowdown': // Pitch down (push forward on stick)
-                if (window.plane) window.plane.setElevator(Math.max(-1, window.plane.elevator - 0.1));
-                break;
-            case 'arrowleft': // Yaw left (left rudder)
-                if (window.plane) window.plane.setRudder(Math.max(-1, window.plane.rudder - 0.1));
-                break;
-            case 'arrowright': // Yaw right (right rudder)
-                if (window.plane) window.plane.setRudder(Math.min(1, window.plane.rudder + 0.1));
-                break;
-            case 'a': // Roll left (aileron left)
-                if (window.plane) window.plane.setAileron(Math.max(-1, window.plane.aileron - 0.1));
-                break;
-            case 'd': // Roll right (aileron right)
-                if (window.plane) window.plane.setAileron(Math.min(1, window.plane.aileron + 0.1));
-                break;
-            case ' ': // Spacebar - neutral controls
-                if (window.plane) {
-                    window.plane.setElevator(0);
-                    window.plane.setRudder(0);
-                    window.plane.setAileron(0);
-                }
-                break;
-        }
-    });
-    
-    // Optional: Add touch controls for mobile devices
-    setupTouchControls();
-}
-
+        
 /**
  * Setup touch controls for mobile devices
  */
@@ -142,9 +104,144 @@ function clearHUD() {
 // Initialize the menu when the script loads
 // Note: In our setup, this is called from app.js after DOMContentLoaded
 // but we keep this here for potential standalone use
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMenu);
-} else {
-    initMenu();
+// UI module for the flight simulator - utility functions only
+
+/**
+
+// UI module for the flight simulator - utility functions only
+
+/**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ * Setup touch controls for mobile devices
+ */
+function setupTouchControls() {
+    // This would implement on-screen joysticks or buttons for mobile
+        hud.remove();
+    }
 }
+
+
+
+
+
+
+
+
+
+// Export functions for use in other modules (if using a module system)
+// For now, we'll attach to window object for simplicity
+window.ui = {
+    showNotification: showNotification,
+    updateHUD: updateHUD,
+    clearHUD: clearHUD,
+    setupTouchControls: setupTouchControls
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
